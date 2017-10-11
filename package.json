@@ -1,0 +1,12 @@
+{
+	"name": "LoveChoice",
+	"scripts": {
+		"dev": "nuxt"
+	},
+	"dependencies": {
+		"nuxt": "^1.0.0-rc11"
+	},
+	"devDependencies": {
+		"babel-preset-env": "^1.6.0"
+	}
+}
