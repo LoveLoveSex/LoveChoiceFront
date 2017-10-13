@@ -38,16 +38,9 @@ Vue.use(VueGoogleMaps, {
 	load: {
 		key: 'AIzaSyBvWE_sIwKbWkiuJQOf8gSk9qzpO96fhfY',
 		libraries: 'places', // This is required if you use the Autocomplete plugin
-		// OR: libraries: 'places,drawing'
-		// OR: libraries: 'places,drawing,visualization'
-		// (as you require)
 		}
 })
 export default{
-	// load: {
-	// 	key: 'AIzaSyDevZb3YA0sepQxginWdFI4inbIGjqh5bo',
-	// 	libraries: 'places'
-	// },
 	data(){
 		return {
 			search: "",
@@ -84,10 +77,19 @@ export default{
 		mapConv: function(){
 			var self = this;
 			for( var i = 0; i < self.hotels.length; i++){
-				var data = {position: {lat: 0, lng: 0}}
-				self.markers.push(data);
+				new Promise(function (resolve, reject) {
+					var geocoder = new google.maps.Geocoder();
+					geocoder.geocode( { 'address': self.hotels[i].street_address}, function(results, status) {
+						if (status == google.maps.GeocoderStatus.OK){
+							resolve( results[0].geometry.viewport)
+						};
+					});
+				}).then(function (hoge) {
+					var data = {position: {lat: hoge.f.b, lng: hoge.b.b}};
+					self.markers.push(data);
+				})
 			}
-			console.log("DONE!");
+			console.log(self.markers);
 		}
 	},
 }
