@@ -23,19 +23,31 @@
 				</li>
 			</ul>
 		</div>
-		<div id="map" class="hotel-map"></div>
-		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDevZb3YA0sepQxginWdFI4inbIGjqh5bo&callback=initMap" async defer></script>
+		<p>↓GoogleMap</p>
+		<gmap-map :center="center" :zoom="7" style="width: 500px; height: 300px" >
+			<gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="center=m.position" ></gmap-marker>
+		</gmap-map>
 	</div>
 </template>
 
 <script>
+import Vue from 'vue'
 import axios from 'axios'
+import * as VueGoogleMaps from '~/node_modules/vue2-google-maps/src/main'
+Vue.use(VueGoogleMaps, {
+	load: {
+		key: 'AIzaSyBvWE_sIwKbWkiuJQOf8gSk9qzpO96fhfY',
+		libraries: 'places', // This is required if you use the Autocomplete plugin
+		// OR: libraries: 'places,drawing'
+		// OR: libraries: 'places,drawing,visualization'
+		// (as you require)
+		}
+})
 export default{
-	head: {
-		// script: [
-		// 	{ src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDevZb3YA0sepQxginWdFI4inbIGjqh5bo&callback=initMap' }
-		// ]
-	},
+	// load: {
+	// 	key: 'AIzaSyDevZb3YA0sepQxginWdFI4inbIGjqh5bo',
+	// 	libraries: 'places'
+	// },
 	data(){
 		return {
 			search: "",
@@ -43,6 +55,8 @@ export default{
 			hotel: {},
 			searchResults: false,
 			searchResult: false,
+			center: {lat: 35.68944, lng: 139.69167},
+			markers: [ { position: {lat: 10.0, lng: 10.0} }, ]
 		};
 	},
 	mounted:function(){
@@ -64,54 +78,17 @@ export default{
 			axios.get(`http://localhost:4567/hotels/${this.search}`).then(function(res){
 				console.log(res.data);
 				self.hotels = res.data;
-				self.initMap()
+				self.mapConv();
 			})
 		},
-		initMap: function(){
-			console.log("initMap!!")
-			var map;
-			var marker = [];
-			var infoWindow = [];
-			var markerData = this.hotels;
+		mapConv: function(){
 			var self = this;
-
-			// 地図の作成
-			var mapLatLng = new google.maps.LatLng({lat: 35.68944, lng: 139.69167}); // 緯度経度のデータ作成
-				map = new google.maps.Map(document.getElementById('map'), { // #sampleに地図を埋め込む
-					center: mapLatLng, // 地図の中心を指定
-					zoom: 9 // 地図のズームを指定
-				});
-
-				// マーカー毎の処理
-				for (var i = 0; i < markerData.length; i++) {
-					var geometry;
-					var address = markerData[i].street_address;
-					var promise = new Promise(function(resolve, reject){
-						var geocoder = new google.maps.Geocoder();
-						geocoder.geocode( { 'address': address}, function(results, status) {
-							if (status == google.maps.GeocoderStatus.OK){
-								geometry = results[0].geometry.viewport;
-								console.log(results);
-								resolve(geometry);
-							};
-						});
-					});
-					promise.then(function(geometry){
-						var markerLatLng = new google.maps.LatLng({lat: geometry.f.b, lng: geometry.b.b}); // 緯度経度のデータ作成
-							marker[i] = new google.maps.Marker({ // マーカーの追加
-								position: markerLatLng, // マーカーを立てる位置を指定
-								map: map // マーカーを立てる地図を指定
-							});
-							infoWindow[i] = new google.maps.InfoWindow({ // 吹き出しの追加
-								content: '<div class="sample">' + markerData[i-1]['name'] + '</div>' // 吹き出しに表示する内容
-							});
-							marker[i].addListener('click', function() { // マーカーをクリックしたとき
-								infoWindow[i].open(map, marker[i]); // 吹き出しの表示
-							});
-					});
-				}
+			for( var i = 0; i < self.hotels.length; i++){
+				var data = {position: {lat: 0, lng: 0}}
+				self.markers.push(data);
+			}
+			console.log("DONE!");
 		}
 	},
-
 }
 </script>
