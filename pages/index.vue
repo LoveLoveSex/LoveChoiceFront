@@ -1,35 +1,41 @@
 <template>
   <div>
-    <input type="text" v-model="search" v-on:keyup.enter="getHotels"><br>
-    <br>
-    <div class="searchResult" v-if="searchResult">
-      <h3>{{ hotel.name }}</h3><br>
-      <p>{{ hotel.summary }}</p><br>
-      <a :href="hotel.hotel_url">{{ hotel.hotel_url }}</a><br>
-      {{ hotel.phone_number }}<br>
-      {{ hotel.street_address }}<br>
-      <br>
-      <span v-on:click="searchResults = true; searchResult = false">戻る</span><br>
+    <div class="sub-nav">
+      <b-alert show dismissible variant="danger" v-if="notice[0]"> {{ notice }}: {{ search }} </b-alert>
+      <input type="text" v-model="search" v-on:keyup.enter="searchHotels" placeholder="検索:">
+      <button v-on:click="searchHotels">検索</button><br>
     </div>
-    <b-alert show dismissible variant="danger" v-if="notice[0]"> {{ notice }} </b-alert>
-    <div class="searchResults" v-if="searchResults">
-      検索ヒット数: {{hotels.length}}
-      <!-- <ul> -->
-      <!-- 	<li>閲覧回数の多い順</li> -->
-      <!-- 	<li>おすすめ順</li> -->
-      <!-- </ul> -->
-      <!-- <br> -->
-      <ul>
-        <li v-for="hotel in hotels">
-          <div class="hotel" v-on:click="hotelShow(hotel.id)">
-            {{hotel.name}}<br>
-            <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a><br>
-            {{hotel.street_address}}<br>
-          </div>
-        </li>
-      </ul>
-      <p>↓GoogleMap</p>
-      <div class="map">
+    <div class="main">
+      <div class="searchResult" v-if="searchResult">
+        <h3>{{ hotel.name }}</h3><br>
+        <p>{{ hotel.summary }}</p><br>
+        <a :href="hotel.hotel_url">{{ hotel.hotel_url }}</a><br>
+        {{ hotel.phone_number }}<br>
+        {{ hotel.street_address }}<br>
+        <br>
+        <span v-on:click="searchResults = true; searchResult = false">戻る</span><br>
+      </div>
+      <div class="searchResults" v-if="searchResults">
+        検索ヒット数: {{hotels.length}}<br>
+        <!-- <select v&#45;model="sort"> -->
+        <!--   <option disabled value="">Please select one</option> -->
+        <!--   <option>人気</option> -->
+        <!--   <option>安い</option> -->
+        <!-- </select> -->
+        <br>
+        <hr>
+        <ul>
+          <li v-for="hotel in hotels">
+            <div class="hotel" v-on:click="hotelShow(hotel.id)">
+              {{hotel.name}}<br>
+              <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a><br>
+              {{hotel.street_address}}<br>
+            </div>
+            <hr>
+          </li>
+        </ul>
+      </div>
+      <div class="map" v-if="searchResults">
         <gmap-map :center="center" :zoom="12" style="width: 100%; height: 500px" >
           <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="center=m.position" ></gmap-marker>
         </gmap-map>
@@ -52,19 +58,22 @@ Vue.use(VueGoogleMaps, {
 export default{
   data(){
     return {
-      search: "",
-      notice: "",
-      hotels: [],
-      hotel: {},
-      searchResults: false,
-      searchResult: false,
-      center: {lat: 35.68944, lng: 139.69167},
-      markers: []
+      search:         "",
+      notice:         "",
+      originalHotels: [],
+      hotels:         [],
+      sort:           '',
+      hotel:          {},
+      searchResults:  false,
+      searchResult:   false,
+      center:         {lat: 35.68944, lng: 139.69167},
+      markers:        []
     };
   },
+ 
   mounted:function(){
-    // this.initMap(); //initMap will execute at pageload
-    },
+    this.getHotels();
+  },
   methods: {
     hotelShow: function(id){
       var self = this;
@@ -76,19 +85,32 @@ export default{
     },
     getHotels: function(){
       var self = this;
-      self.searchResults = true;
-      self.searchResult  = false;
-      axios.get(`http://localhost:4567/hotels/${this.search}`).then(function(res){
-        self.hotels = res.data;
-        if (self.hotels[0]) {
-          self.notice = "";
-          self.mapConv();
-        } else {
-          self.searchResults = false;
-          self.searchResult  = false;
-          self.notice = "検索結果なし"
-        }
+      axios.get(`http://localhost:4567/hotels`).then(function(res){
+        self.originalHotels = res.data;
       })
+    },
+    searchHotels: function(){
+      var vm = this;
+      var hotels = JSON.parse(JSON.stringify(vm.originalHotels));
+      vm.notice = "";
+      vm.hotels = [];
+      for ( var i = 0; i < hotels.length; i++  ){
+        if ( hotels[i].name.match(`${vm.search}`) ) {
+          vm.hotels.push(hotels[i])
+          console.log("hit!:" + i);
+        } else {
+          console.log("no: " + i);
+        }
+      };
+      if ( !vm.hotels[0] ){  
+        vm.notice = "検索結果なし" ;
+        vm.searchResults = false;
+        vm.searchResult  = false;
+      } else {
+        vm.searchResults = true;
+        vm.searchResult  = false;
+      };
+      vm.mapConv();
     },
     mapConv: function(){
       var self = this;
@@ -106,7 +128,6 @@ export default{
           self.markers.push(data);
         });
       };
-      this.center = {lat: this.markers[0].position.lat, lng: this.markers[0].position.lng}
     }
   },
 }
