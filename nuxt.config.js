@@ -1,4 +1,7 @@
 module.exports = {
+  modules: [
+    '@nuxtjs/bootstrap-vue',
+  ],
   head: {
     meta: [
       { charset: 'utf-8' },
