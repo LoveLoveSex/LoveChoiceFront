@@ -11,7 +11,7 @@
 			<br>
 			<span v-on:click="searchResults = true; searchResult = false">戻る</span><br>
 		</div>
-		{{ notice }}
+		<b-alert show dismissible variant="danger" v-if="notice[0]"> {{ notice }} </b-alert>
 		<div class="searchResults" v-if="searchResults">
 			検索ヒット数: {{hotels.length}}
 			<!-- <ul> -->
@@ -42,6 +42,7 @@
 import Vue from 'vue'
 import axios from 'axios'
 import * as VueGoogleMaps from '~/node_modules/vue2-google-maps/src/main'
+
 Vue.use(VueGoogleMaps, {
 	load: {
 		key: 'AIzaSyBvWE_sIwKbWkiuJQOf8gSk9qzpO96fhfY',
@@ -105,7 +106,7 @@ export default{
 					self.markers.push(data);
 				});
 			};
-			self.center = {lat: markers[0].position.lat, lng: markers[0].position.lng}
+			this.center = {lat: this.markers[0].position.lat, lng: this.markers[0].position.lng}
 		}
 	},
 }
