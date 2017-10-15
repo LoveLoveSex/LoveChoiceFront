@@ -1,35 +1,39 @@
 <template>
   <div>
-    <input type="text" v-model="search" v-on:keyup.enter="getHotels"><br>
-    <br>
-    <div class="searchResult" v-if="searchResult">
-      <h3>{{ hotel.name }}</h3><br>
-      <p>{{ hotel.summary }}</p><br>
-      <a :href="hotel.hotel_url">{{ hotel.hotel_url }}</a><br>
-      {{ hotel.phone_number }}<br>
-      {{ hotel.street_address }}<br>
-      <br>
-      <span v-on:click="searchResults = true; searchResult = false">戻る</span><br>
+    <div class="sub-nav">
+      <b-alert show dismissible variant="danger" v-if="notice[0]"> {{ notice }} </b-alert>
+      <input type="text" v-model="search" v-on:keyup.enter="getHotels" placeholder="検索:">
+      <button v-on:click="getHotels">検索</button><br>
     </div>
-    <b-alert show dismissible variant="danger" v-if="notice[0]"> {{ notice }} </b-alert>
-    <div class="searchResults" v-if="searchResults">
-      検索ヒット数: {{hotels.length}}
-      <!-- <ul> -->
-      <!-- 	<li>閲覧回数の多い順</li> -->
-      <!-- 	<li>おすすめ順</li> -->
-      <!-- </ul> -->
-      <!-- <br> -->
-      <ul>
-        <li v-for="hotel in hotels">
-          <div class="hotel" v-on:click="hotelShow(hotel.id)">
-            {{hotel.name}}<br>
-            <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a><br>
-            {{hotel.street_address}}<br>
-          </div>
-        </li>
-      </ul>
-      <p>↓GoogleMap</p>
-      <div class="map">
+    <div class="main">
+      <div class="searchResult" v-if="searchResult">
+        <h3>{{ hotel.name }}</h3><br>
+        <p>{{ hotel.summary }}</p><br>
+        <a :href="hotel.hotel_url">{{ hotel.hotel_url }}</a><br>
+        {{ hotel.phone_number }}<br>
+        {{ hotel.street_address }}<br>
+        <br>
+        <span v-on:click="searchResults = true; searchResult = false">戻る</span><br>
+      </div>
+      <div class="searchResults" v-if="searchResults">
+        検索ヒット数: {{hotels.length}}
+        <!-- <ul> -->
+        <!-- 	<li>閲覧回数の多い順</li> -->
+        <!-- 	<li>おすすめ順</li> -->
+        <!-- </ul> -->
+        <!-- <br> -->
+        <ul>
+          <li v-for="hotel in hotels">
+            <div class="hotel" v-on:click="hotelShow(hotel.id)">
+              {{hotel.name}}<br>
+              <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a><br>
+              {{hotel.street_address}}<br>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div class="map" v-if="searchResults">
+        <p>↓GoogleMap</p>
         <gmap-map :center="center" :zoom="12" style="width: 100%; height: 500px" >
           <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="center=m.position" ></gmap-marker>
         </gmap-map>
