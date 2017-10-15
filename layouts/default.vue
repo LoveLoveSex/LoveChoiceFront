@@ -1,7 +1,7 @@
 <template>
-	<div class="nav">
-		LoveChoice
-		<nuxt/>
-	</div>
+  <div class="nav">
+    LoveChoice
+    <nuxt/>
+  </div>
 </template>
 
