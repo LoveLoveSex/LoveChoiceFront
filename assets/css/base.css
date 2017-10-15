@@ -1,12 +1,15 @@
 
 .searchResults ul{
   list-style: none;
-}
-
-.hotelResults{
   width: 40%;
   float: left;
 }
+
+.map {
+  width: 50%;
+  float: left;
+}
+
 
 .hotel {
   background: #ccc;
@@ -14,3 +17,4 @@
   margin: 10px;
   padding: 10px;
 }
+
