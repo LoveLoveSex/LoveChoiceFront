@@ -29,6 +29,7 @@
               <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a><br>
               {{hotel.street_address}}<br>
             </div>
+            <hr>
           </li>
         </ul>
       </div>
@@ -56,14 +57,14 @@ Vue.use(VueGoogleMaps, {
 export default{
   data(){
     return {
-      search: "",
-      notice: "",
-      hotels: [],
-      hotel: {},
+      search:        "",
+      notice:        "",
+      hotels:        [],
+      hotel:         {},
       searchResults: false,
-      searchResult: false,
-      center: {lat: 35.68944, lng: 139.69167},
-      markers: []
+      searchResult:  false,
+      center:        {lat: 35.68944, lng: 139.69167},
+      markers:       []
     };
   },
   mounted:function(){
