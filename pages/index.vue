@@ -2,8 +2,7 @@
   <div>
     <div class="sub-nav">
       <b-alert show dismissible variant="danger" v-if="notice[0]"> {{ notice }}: {{ search }} </b-alert>
-      <input type="text" v-model="search" v-on:keyup.enter="searchHotels" placeholder="検索:">
-      <button v-on:click="searchHotels">検索</button><br>
+      <input v-model="search" placeholder="Search:">
     </div>
     <div class="main">
       <div class="searchResult" v-if="searchResult">
@@ -16,16 +15,15 @@
         <span v-on:click="searchResults = true; searchResult = false">戻る</span><br>
       </div>
       <div class="searchResults" v-if="searchResults">
-        検索ヒット数: {{hotels.length}}<br>
-        <!-- <select v&#45;model="sort"> -->
-        <!--   <option disabled value="">Please select one</option> -->
-        <!--   <option>人気</option> -->
-        <!--   <option>安い</option> -->
-        <!-- </select> -->
+        <select v-model="sort">
+          <option disabled value="">Please select one</option>
+          <option>人気</option>
+          <option>安い</option>
+        </select>
         <br>
         <hr>
         <ul>
-          <li v-for="hotel in hotels">
+          <li v-for="(hotel, index) in hotelsList" v-bind:key="hotel.name" v-bind:data-index="index">
             <div class="hotel" v-on:click="hotelShow(hotel.id)">
               {{hotel.name}}<br>
               <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a><br>
@@ -61,18 +59,31 @@ export default{
       search:         "",
       notice:         "",
       originalHotels: [],
-      hotels:         [],
       sort:           '',
       hotel:          {},
-      searchResults:  false,
+      searchResults:  true,
       searchResult:   false,
       center:         {lat: 35.68944, lng: 139.69167},
-      markers:        []
+      markers:        [],
     };
   },
- 
   mounted:function(){
     this.getHotels();
+  },
+  computed: {
+    hotelsList: function () {
+      var vm = this;
+      vm.markers = [];
+      vm.notice = "";
+      if ( vm.search[0] ){
+        return this.originalHotels.filter(function (hotel) {
+          if ( hotel.name.match(`${vm.search}`) ) {
+            vm.mapConv(hotel.street_address);
+            return true
+          }
+        });
+      }
+    }
   },
   methods: {
     hotelShow: function(id){
@@ -88,46 +99,21 @@ export default{
       axios.get(`http://localhost:4567/hotels`).then(function(res){
         self.originalHotels = res.data;
       })
+      console.log("Loaded");
     },
-    searchHotels: function(){
-      var vm = this;
-      var hotels = JSON.parse(JSON.stringify(vm.originalHotels));
-      vm.notice = "";
-      vm.hotels = [];
-      for ( var i = 0; i < hotels.length; i++  ){
-        if ( hotels[i].name.match(`${vm.search}`) ) {
-          vm.hotels.push(hotels[i])
-          console.log("hit!:" + i);
-        } else {
-          console.log("no: " + i);
-        }
-      };
-      if ( !vm.hotels[0] ){  
-        vm.notice = "検索結果なし" ;
-        vm.searchResults = false;
-        vm.searchResult  = false;
-      } else {
-        vm.searchResults = true;
-        vm.searchResult  = false;
-      };
-      vm.mapConv();
-    },
-    mapConv: function(){
+    mapConv: function(address){
       var self = this;
-      self.markers = [];
-      for( var i = 0; i < self.hotels.length; i++){
-        new Promise(function (resolve, reject) {
-          var geocoder = new google.maps.Geocoder();
-          geocoder.geocode( { 'address': self.hotels[i].street_address}, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK){
-              resolve( results[0].geometry.viewport );
-            };
-          });
-        }).then(function (hoge) {
-          var data = {position: {lat: hoge.f.b, lng: hoge.b.b}};
-          self.markers.push(data);
+      new Promise(function (resolve, reject) {
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode( { 'address': address}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK){
+            resolve( results[0].geometry.viewport );
+          };
         });
-      };
+      }).then(function (hoge) {
+        var data = {position: {lat: hoge.f.b, lng: hoge.b.b}};
+        self.markers.push(data);
+      });
     }
   },
 }
