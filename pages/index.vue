@@ -7,16 +7,19 @@
       <div class="searchResults">
         <select v-model="sort">
           <option disabled value="">Please select one</option>
-          <option value="hotel.access_count">人気</option>
-          <option value="B">安い</option>
+          <option value="popularity">人気</option>
+          <option value="weekday-rest">平日休憩(安い)</option>
+          <option value="holiday-rest">休日休憩(安い)</option>
+          <option value="weekday-stay">平日宿泊(安い)</option>
+          <option value="holiday-stay">休日宿泊(安い)</option>
         </select>
         <br>
         <hr>
         <ul>
-          <li v-for="(hotel, index) in hotelsList" v-bind:key="hotel.name" v-bind:data-index="hotelSort">
+          <li v-for="(hotel, index) in hotelsList" v-bind:key="hotel.name" v-bind:data-index="hotel.id">
             <div class="hotel">
               <nuxt-link :to="'/hotels/'+hotel.hotel.id">{{hotel.hotel.name}}</nuxt-link><br>
-              {{ hotel.hotel.access_count }}
+              {{ hotel.hotel.access_count }}<br>
               {{ hotel.hotel.street_address }}<br>
             </div>
             <hr>
@@ -49,6 +52,7 @@ export default{
     return {
       search:         "",
       originalHotels: [],
+      filteredHotels: [],
       sort:           '',
       center:         {lat: 35.68944, lng: 139.69167},
       markers:        [],
@@ -57,23 +61,58 @@ export default{
   mounted:function(){
     this.getHotels();
   },
-  
+
   computed: {
-    hotelSort: function() {
-      var vm = this;
-      console.log("DONE");
-      return vm.sort
-    },
     hotelsList: function () {
       var vm = this;
       vm.markers = [];
       if ( vm.search[0] ){
-        return this.originalHotels.filter(function (hotel) {
+        vm.filteredHotels = this.originalHotels.filter(function (hotel) {
           if ( hotel.hotel.name.match(`${vm.search}`) ) {
             vm.mapConv(hotel.hotel.street_address);
             return true
           }
         });
+        switch (vm.sort) {
+          case "popularity":
+            console.log("popularity");
+            vm.filteredHotels.sort(function(a,b){
+              if( a.hotel.access_count > b.hotel.access_count ){ return -1 };
+              if( a.hotel.access_count < b.hotel.access_count ){ return 1 };
+              return 0;
+            });
+          break;
+          case "weekday-rest":
+            console.log("weekday-rest");
+            vm.filteredHotels.sort(function(a,b){
+              if( a.service[0].money < b.service[0].money ){ return -1 };
+              if( a.service[0].money > b.service[0].money ){ return 1 };
+              return 0;
+            });
+          break;
+          case "weekday-stay":
+            vm.filteredHotels.sort(function(a,b){
+              if( a.service[1].money < b.service[1].money ){ return -1 };
+              if( a.service[1].money > b.service[1].money ){ return 1 };
+              return 0;
+            });
+          break
+          case "holiday-rest":
+            vm.filteredHotels.sort(function(a,b){
+              if( a.service[3].money < b.service[2].money ){ return -1 };
+              if( a.service[3].money > b.service[2].money ){ return 1 };
+              return 0;
+            });
+          break
+          case "holiday-stay":
+            vm.filteredHotels.sort(function(a,b){
+              if( a.service[3].money < b.service[3].money ){ return -1 };
+              if( a.service[3].money > b.service[3].money ){ return 1 };
+              return 0;
+            });
+          break
+        }
+        return vm.filteredHotels
       }
     }
   },
@@ -83,7 +122,6 @@ export default{
       axios.get(`http://localhost:4567/hotels`).then(function(res){
         self.originalHotels = res.data;
       })
-      console.log("Loaded");
     },
     mapConv: function(address){
       var self = this;
