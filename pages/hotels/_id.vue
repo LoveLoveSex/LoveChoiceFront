@@ -1,8 +1,14 @@
 <template>
   <div class="sub-nav">
-    <h3>{{ name }}</h3>
-    <p>{{ summary }}</p>
-    <a :href="hotel_url">{{hotel_url}}</a>
+    <h3>{{ hotel.name }}</h3>
+    <p>{{ hotel.summary }}</p>
+    <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a>
+
+    <h4>値段</h4>
+    <ul>
+      <li v-for="service in services">{{ service.name }}: {{ service.money }}</li>
+    </ul>
+    <p>未設定箇所は0と表記されます</p>
   </div>
 </template>
 
