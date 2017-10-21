@@ -38,6 +38,28 @@ html, body{
 
 /* index */
 
+.active {
+  border-bottom: 3px solid #11ff99;
+}
+
+ul.sort {
+  width: 100%;
+  padding:0;
+  font-size:0px;
+}
+
+ul.sort li {
+  width: 20%;
+  /* border:1px solid black; */
+  display: inline-block;
+  text-align: center;
+  font-size: 13px;
+}
+
+ul.sort li a {
+  display: block;
+}
+
 input{
   margin: 5px;
   height: 1.5em;

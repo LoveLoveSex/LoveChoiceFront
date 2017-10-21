@@ -1,41 +1,30 @@
 <template>
   <div>
     <div class="sub-nav">
-      <b-alert show dismissible variant="danger" v-if="notice[0]"> {{ notice }}: {{ search }} </b-alert>
-      <input type="text" v-model="search" v-on:keyup.enter="searchHotels" placeholder="検索:">
-      <button v-on:click="searchHotels">検索</button><br>
+      <input v-model="search" placeholder="Search:">
     </div>
     <div class="main">
-      <div class="searchResult" v-if="searchResult">
-        <h3>{{ hotel.name }}</h3><br>
-        <p>{{ hotel.summary }}</p><br>
-        <a :href="hotel.hotel_url">{{ hotel.hotel_url }}</a><br>
-        {{ hotel.phone_number }}<br>
-        {{ hotel.street_address }}<br>
-        <br>
-        <span v-on:click="searchResults = true; searchResult = false">戻る</span><br>
-      </div>
-      <div class="searchResults" v-if="searchResults">
-        検索ヒット数: {{hotels.length}}<br>
-        <!-- <select v&#45;model="sort"> -->
-        <!--   <option disabled value="">Please select one</option> -->
-        <!--   <option>人気</option> -->
-        <!--   <option>安い</option> -->
-        <!-- </select> -->
-        <br>
+      <div class="searchResults">
+        並び替え:<br>
+        <ul v-model="sort" class="sort">
+          <li v-on:click="sorting('popularity')"   :class="{active: inActivePropularity}">人気</li>
+          <li v-on:click="sorting('weekday-rest')" :class="{active: inActiveWeekdayRest}">休憩(平日)</li>
+          <li v-on:click="sorting('holiday-rest')" :class="{active: inActiveHolidayRest}">休憩(休日)</li>
+          <li v-on:click="sorting('weekday-stay')" :class="{active: inActiveWeekdayStay}">宿泊(平日)</li>
+          <li v-on:click="sorting('holiday-stay')" :class="{active: inActiveHolidayStay}">宿泊(休日)</li>
+        </ul>
         <hr>
         <ul>
-          <li v-for="hotel in hotels">
-            <div class="hotel" v-on:click="hotelShow(hotel.id)">
-              {{hotel.name}}<br>
-              <a :href="hotel.hotel_url">{{hotel.hotel_url}}</a><br>
-              {{hotel.street_address}}<br>
+          <li v-for="(hotel, index) in hotelsList" v-bind:key="hotel.name" v-bind:data-index="hotel.id">
+            <div class="hotel">
+              <nuxt-link :to="'/hotels/'+hotel.hotel.id">{{hotel.hotel.name}}</nuxt-link><br>
+              {{ hotel.hotel.street_address }}<br>
             </div>
             <hr>
           </li>
         </ul>
       </div>
-      <div class="map" v-if="searchResults">
+      <div class="map">
         <gmap-map :center="center" :zoom="12" style="width: 100%; height: 500px" >
           <gmap-marker :key="index" v-for="(m, index) in markers" :position="m.position" :clickable="true" :draggable="true" @click="center=m.position" ></gmap-marker>
         </gmap-map>
@@ -55,79 +44,121 @@ Vue.use(VueGoogleMaps, {
     libraries: 'places', // This is required if you use the Autocomplete plugin
   }
 })
+
 export default{
   data(){
     return {
       search:         "",
-      notice:         "",
       originalHotels: [],
-      hotels:         [],
+      filteredHotels: [],
       sort:           '',
-      hotel:          {},
-      searchResults:  false,
-      searchResult:   false,
       center:         {lat: 35.68944, lng: 139.69167},
-      markers:        []
+      markers:        [],
+      inActivePropularity: false,
+      inActiveWeekdayRest: false,
+      inActiveHolidayRest: false,
+      inActiveWeekdayStay: false,
+      inActiveHolidayStay: false,
     };
   },
- 
   mounted:function(){
     this.getHotels();
   },
+  computed: {
+    hotelsList: function () {
+      var vm = this;
+      vm.markers = [];
+      console.log("DONE");
+      if ( vm.search[0] ){
+        vm.filteredHotels = this.originalHotels.filter(function (hotel) {
+          if ( hotel.hotel.name.match(`${vm.search}`) ) {
+            vm.mapConv(hotel.hotel.street_address);
+            return true
+          }
+        });
+        vm.inActivePropularity = false;
+        vm.inActiveHolidayRest = false;
+        vm.inActiveHolidayStay = false;
+        vm.inActiveWeekdayRest = false;
+        vm.inActiveWeekdayStay = false;
+        switch (vm.sort) {
+          case "popularity":
+            vm.inActivePropularity = true;
+            console.log("popularity");
+            vm.filteredHotels.sort(function(a,b){
+              console.log(a.hotel.access_count);
+              if( a.hotel.access_count > b.hotel.access_count ){ return -1 };
+              if( a.hotel.access_count < b.hotel.access_count ){ return 1 };
+              return 0;
+            });
+          break;
+          case "weekday-rest":
+            console.log("weekday-rest");
+            vm.inActiveWeekdayRest = true;
+            vm.filteredHotels.sort(function(a,b){
+              console.log(a.service[0].money);
+              if( a.service[0].money < b.service[0].money ){ return -1 };
+              if( a.service[0].money > b.service[0].money ){ return 1 };
+              return 0;
+            });
+          break;
+          case "weekday-stay":
+            vm.inActiveWeekdayStay = true;
+            vm.filteredHotels.sort(function(a,b){
+              console.log(a.service[1].money);
+              if( a.service[1].money < b.service[1].money ){ return -1 };
+              if( a.service[1].money > b.service[1].money ){ return 1 };
+              return 0;
+            });
+          break
+          case "holiday-rest":
+            vm.inActiveHolidayRest = true;
+            vm.filteredHotels.sort(function(a,b){
+              console.log(a.service[2].money);
+              if( a.service[2].money < b.service[2].money ){ return -1 };
+              if( a.service[2].money > b.service[2].money ){ return 1 };
+              return 0;
+            });
+          break
+          case "holiday-stay":
+            vm.inActiveHolidayStay = true;
+            vm.filteredHotels.sort(function(a,b){
+              console.log(a.service[3].money);
+              if( a.service[3].money < b.service[3].money ){ return -1 };
+              if( a.service[3].money > b.service[3].money ){ return 1 };
+              return 0;
+            });
+          break
+        }
+        return vm.filteredHotels
+      }
+    }
+  },
   methods: {
-    hotelShow: function(id){
-      var self = this;
-      self.searchResults = false;
-      self.searchResult  = true;
-      axios.get(`http://localhost:4567/hotel/${id}`).then(function(res){
-        self.hotel = res.data;
-      });
-    },
     getHotels: function(){
       var self = this;
       axios.get(`http://localhost:4567/hotels`).then(function(res){
         self.originalHotels = res.data;
       })
     },
-    searchHotels: function(){
+    sorting: function(value) {
       var vm = this;
-      var hotels = JSON.parse(JSON.stringify(vm.originalHotels));
-      vm.notice = "";
-      vm.hotels = [];
-      for ( var i = 0; i < hotels.length; i++  ){
-        if ( hotels[i].name.match(`${vm.search}`) ) {
-          vm.hotels.push(hotels[i])
-          console.log("hit!:" + i);
-        } else {
-          console.log("no: " + i);
-        }
-      };
-      if ( !vm.hotels[0] ){  
-        vm.notice = "検索結果なし" ;
-        vm.searchResults = false;
-        vm.searchResult  = false;
-      } else {
-        vm.searchResults = true;
-        vm.searchResult  = false;
-      };
-      vm.mapConv();
+      console.log(value);
+      vm.sort = value;
     },
-    mapConv: function(){
+    mapConv: function(address){
       var self = this;
-      self.markers = [];
-      for( var i = 0; i < self.hotels.length; i++){
-        new Promise(function (resolve, reject) {
-          var geocoder = new google.maps.Geocoder();
-          geocoder.geocode( { 'address': self.hotels[i].street_address}, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK){
-              resolve( results[0].geometry.viewport );
-            };
-          });
-        }).then(function (hoge) {
-          var data = {position: {lat: hoge.f.b, lng: hoge.b.b}};
-          self.markers.push(data);
+      new Promise(function (resolve, reject) {
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode( { 'address': address}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK){
+            resolve( results[0].geometry.viewport );
+          };
         });
-      };
+      }).then(function (hoge) {
+        var data = {position: {lat: hoge.f.b, lng: hoge.b.b}};
+        self.markers.push(data);
+      });
     }
   },
 }

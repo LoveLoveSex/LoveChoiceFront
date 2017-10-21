@@ -2,7 +2,7 @@
   <div>
     <div class="nav">
       <ul>
-        <li class="service-title">LoveChoice</li>
+        <li class="service-title"><nuxt-link to="/">LoveChoice</nuxt-link></li>
         <li><img src="" alt="icon"></li>
       </ul>
     </div>
