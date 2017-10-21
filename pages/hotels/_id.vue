@@ -13,14 +13,15 @@
 </template>
 
 <script>
-import axios from 'axios'
+// import axios from 'axios'
+import axios from '~/plugins/axios'
 export default{
   validate ({ params }) {
     return /^\d+$/.test(params.id)
   },
   async asyncData ({ params, error }) {
     try {
-      const { data } = await axios.get(`http://localhost:4567/hotel/${+params.id}`)
+      const { data } = await axios.get(`/hotel/${+params.id}`)
       return data
     } catch (e) {
       error({ message: 'Hotel not found', statusCode: 404 })
