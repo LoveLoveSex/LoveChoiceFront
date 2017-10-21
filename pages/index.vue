@@ -35,7 +35,8 @@
 
 <script>
 import Vue from 'vue'
-import axios from 'axios'
+// import axios from 'axios'
+import axios from '~/plugins/axios'
 import * as VueGoogleMaps from '~/node_modules/vue2-google-maps/src/main'
 
 Vue.use(VueGoogleMaps, {
@@ -137,7 +138,7 @@ export default{
   methods: {
     getHotels: function(){
       var self = this;
-      axios.get(`http://localhost:4567/hotels`).then(function(res){
+      axios.get(`/hotels`).then(function(res){
         self.originalHotels = res.data;
       })
     },

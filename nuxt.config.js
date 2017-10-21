@@ -1,7 +1,11 @@
 module.exports = {
+  cache: true,
   modules: [
     '@nuxtjs/bootstrap-vue',
   ],
+  env: {
+    baseUrl: process.env.BASE_URL || 'http://localhost:3000'
+  },
   head: {
     meta: [
       { charset: 'utf-8' },
